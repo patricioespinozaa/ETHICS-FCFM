@@ -14,7 +14,7 @@ def analizar_dependencias(texto):
     
     return total_subordinadas
 
-def aplicar_dependencias_grupal(df, col_ind1, col_grup, col_ind2):
+def aplicar_dependencias_grupal(df, dif, caso, col_ind1, col_grup, col_ind2):
     # Aplicar analizar_dependencias directamente a col_ind1 y col_ind2 (en todas las filas)
     df['Ind1_d'] = df[col_ind1].apply(lambda x: analizar_dependencias(str(x)))
     df['Ind2_d'] = df[col_ind2].apply(lambda x: analizar_dependencias(str(x)))
@@ -24,10 +24,14 @@ def aplicar_dependencias_grupal(df, col_ind1, col_grup, col_ind2):
     df = df.merge(grouped[['Grup', 'agno', 'seccion', 'Grup_d']], 
                   on=['Grup', 'agno', 'seccion'], 
                   how='left')
+    
+    # Guardar datos
+    df.to_csv(f"processed_data/{caso}/diferencial_{dif}_dependencias.csv", index=False)
+
     return df
 
 def graficar_boxplot(df1, df2, caso):
-    path = f"../resultados/{caso}"
+    path = f"resultados/{caso}"
 
     plt.style.use('fivethirtyeight')
     plt.figure(figsize=(10, 5))
@@ -48,7 +52,7 @@ def graficar_boxplot(df1, df2, caso):
 
 def crear_tabla_dependencias(df1, df2, caso):
     # Crea una tabla con los conteos de dependencias encontradas.
-    path = f"../resultados/{caso}"
+    path = f"resultados/{caso}"
 
     diferenciales = []
     for i, df in enumerate([df1, df2], start=1):
@@ -71,12 +75,12 @@ def crear_tabla_dependencias(df1, df2, caso):
     table.set_fontsize(12)
     table.scale(1.2, 1.2)
 
-    plt.savefig(f"{path}/Analisis_Gramatical_tabla_dependencias.png", bbox_inches='tight')
+    plt.savefig(f"{path}/Analisis_Gramatical_Tabla_Dependencias.png", bbox_inches='tight')
     plt.close()
 
 def graficar_conteos(df1, df2, caso):
     # Genera gráficos de los conteos de dependencias encontradas.
-    path = f"../resultados/{caso}"
+    path = f"resultados/{caso}"
 
     diferencial_1_counts = [
         (df1['Ind1_d'] < df1['Ind2_d']).sum(),
@@ -113,12 +117,12 @@ def graficar_conteos(df1, df2, caso):
 
 # Función principal que ejecuta el análisis
 def ejecutar_analisis(df_diferencial_1, df_diferencial_2, caso):
-    df_diferencial_1 = aplicar_dependencias_grupal(df_diferencial_1, 
+    df_diferencial_1 = aplicar_dependencias_grupal(df_diferencial_1, 1, caso, 
                                                    'Comentario - Ind1 - Diferencial 1', 
                                                    'Comentario - Grup - Diferencial 1', 
                                                    'Comentario - Ind2 - Diferencial 1')
     
-    df_diferencial_2 = aplicar_dependencias_grupal(df_diferencial_2, 
+    df_diferencial_2 = aplicar_dependencias_grupal(df_diferencial_2, 2, caso,
                                                    'Comentario - Ind1 - Diferencial 2', 
                                                    'Comentario - Grup - Diferencial 2', 
                                                    'Comentario - Ind2 - Diferencial 2')
@@ -126,6 +130,3 @@ def ejecutar_analisis(df_diferencial_1, df_diferencial_2, caso):
     graficar_boxplot(df_diferencial_1, df_diferencial_2, caso)
     crear_tabla_dependencias(df_diferencial_1, df_diferencial_2, caso)
     graficar_conteos(df_diferencial_1, df_diferencial_2, caso)
-
-# Llama a la función principal con tus DataFrames
-# ejecutar_analisis(df_diferencial_1, df_diferencial_2)

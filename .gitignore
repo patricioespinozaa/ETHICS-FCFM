@@ -1,2 +1,4 @@
 ethic_unit_env/ 
 data/
+models/
+processed_data/
