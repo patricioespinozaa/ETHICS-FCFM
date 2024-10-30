@@ -2,6 +2,9 @@ import spacy
 import numpy as np
 import json
 from utils.bertopic_model import cargar_stopwords, StemmerTokenizer, stop_words_custom
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
 
 # Cargar el modelo de embeddings de spaCy en español
 nlp = spacy.load("es_core_news_md") 
@@ -92,19 +95,6 @@ def predict_ethic_topic(df1, df2, caso):
 
 
 # === Graficar === #
-import seaborn as sns
-import matplotlib.pyplot as plt
-from collections import Counter
-import pandas as pd
-
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-
 def procesar_y_graficar_topicos(caso, differential):
     # Leer dataframes
     df = pd.read_csv(f"processed_data/{caso}/ETHIC_Topics_df{differential}.csv")
@@ -136,33 +126,63 @@ def procesar_y_graficar_topicos(caso, differential):
     # Reemplazar NaN por 0
     all_counts.fillna(0, inplace=True)
 
-    # Preparar los datos para el gráfico
-    all_counts['Frecuencia_Ind1'] = all_counts['Frecuencia_Ind1'].astype(int)
-    all_counts['Frecuencia_Grup'] = all_counts['Frecuencia_Grup'].astype(int)
-    all_counts['Frecuencia_Ind2'] = all_counts['Frecuencia_Ind2'].astype(int)
-
+    # Preparar las frecuencias totales
+    all_counts['Frecuencia_Total'] = all_counts['Frecuencia_Ind1'] + all_counts['Frecuencia_Grup'] + all_counts['Frecuencia_Ind2']
+    
     # Obtener los tópicos y frecuencias
     top_words = all_counts['Tópico']
     freqs_ind1 = all_counts['Frecuencia_Ind1']
     freqs_grup = all_counts['Frecuencia_Grup']
     freqs_ind2 = all_counts['Frecuencia_Ind2']
 
-    # Graficar
+    # Posiciones en el eje X
     x = range(len(top_words))
+
+    # Crear el gráfico de barras agrupadas
     plt.figure(figsize=(14, 8))
-    width = 0.2  
+    width = 0.2  # Ancho de las barras
     plt.bar([p - width for p in x], freqs_ind1, width=width, label='Ind1', color=sns.color_palette("Blues")[2])
     plt.bar(x, freqs_grup, width=width, label='Grup', color=sns.color_palette("Greens")[2])
     plt.bar([p + width for p in x], freqs_ind2, width=width, label='Ind2', color=sns.color_palette("Oranges")[2])
+
+    # Añadir etiquetas y leyenda
     plt.xlabel('Tópicos (Palabras Clave)', fontsize=14)
     plt.ylabel('Frecuencia', fontsize=14)
     plt.title(f"Frecuencia de Tópicos por Etapa - Diferencial {differential}", fontsize=16)
     plt.xticks(ticks=x, labels=top_words, rotation=90, fontsize=12)
     plt.legend(fontsize=12)
+
+    # Añadir líneas de cuadrícula
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()
 
+    # Guardar el gráfico
     plt.savefig(f"resultados/{caso}/ETHIC_Topics_Dif{differential}.png")
-    plt.show() 
+    
+    # Graficar los 10 tópicos más comunes
+    topico_frecuencia = all_counts[['Tópico', 'Frecuencia_Total']].sort_values(by='Frecuencia_Total', ascending=False).head(10)
+
+    plt.figure(figsize=(10, 6))
+    plt.barh(topico_frecuencia['Tópico'], topico_frecuencia['Frecuencia_Total'], color='skyblue')
+    plt.xlabel('Frecuencia')
+    plt.ylabel('Tópico')
+    plt.title(f'Top 10 Tópicos Relevantes Más Comunes - Diferencial {differential}')
+    plt.gca().invert_yaxis()  # Invertir el eje Y para mostrar el más común arriba
+    plt.tight_layout()
+    plt.savefig(f"resultados/{caso}/ETHIC_Top10_Topicos_Dif{differential}.png")
+
+    # Graficar los 20 tópicos menos comunes
+    topico_frecuencia_menor = all_counts[['Tópico', 'Frecuencia_Total']].sort_values(by='Frecuencia_Total').head(20)
+
+    plt.figure(figsize=(10, 6))
+    plt.barh(topico_frecuencia_menor['Tópico'], topico_frecuencia_menor['Frecuencia_Total'], color='salmon')
+    plt.xlabel('Frecuencia')
+    plt.ylabel('Tópico')
+    plt.title(f'Top 20 Tópicos Relevantes Menos Comunes - Diferencial {differential}')
+    plt.gca().invert_yaxis()  # Invertir el eje Y para mostrar el menos común arriba
+    plt.tight_layout()
+    plt.savefig(f"resultados/{caso}/ETHIC_Top20_Topicos_Menos_Comunes_Dif{differential}.png")
+
+
 
 
