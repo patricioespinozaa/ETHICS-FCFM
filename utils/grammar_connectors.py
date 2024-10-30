@@ -4,6 +4,9 @@ from collections import Counter
 import spacy
 import os
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from utils.bertopic_model import cargar_stopwords
+
 # Cargar el modelo de Spacy en español
 nlp = spacy.load("es_core_news_md")
 
@@ -57,6 +60,81 @@ def extract_grammar_connectors(df1, df2, caso):
     plt.savefig(f"resultados/{caso}/Conectores_frecuencia_tabla.png")
 
 
+# === Analisis de palabras clave después de conectores ===
+
+import os
+import pandas as pd
+import spacy
+from collections import Counter
+from sklearn.feature_extraction.text import TfidfVectorizer
+import matplotlib.pyplot as plt
+
+nlp = spacy.load("es_core_news_md")
+
+def identificar_conectores_y_frases(texto):
+    doc = nlp(texto)
+    conectores_y_frases = []
+    for token in doc:
+        if token.pos_ in ["CCONJ", "SCONJ", "ADP"]:
+            frase = ' '.join([t.text for t in doc[token.i + 1:token.i + 6]])  # Captura hasta 5 palabras después del conector
+            conectores_y_frases.append((token.text, frase))
+    return conectores_y_frases
+
+def extract_keywords_after_connectors(df1, df2, caso):
+    conectores_y_frases_totales = []
+
+    # Extraer conectores y frases de las columnas de df1 para Diferencial 1
+    for column in ['Comentario - Ind1 - Diferencial 1', 'Comentario - Grup - Diferencial 1', 'Comentario - Ind2 - Diferencial 1']:
+        conectores_y_frases_totales.extend(df1[column].apply(identificar_conectores_y_frases).tolist())
+
+    # Extraer conectores y frases de las columnas de df2 para Diferencial 2
+    for column in ['Comentario - Ind1 - Diferencial 2', 'Comentario - Grup - Diferencial 2', 'Comentario - Ind2 - Diferencial 2']:
+        conectores_y_frases_totales.extend(df2[column].apply(identificar_conectores_y_frases).tolist())
+
+    # Aplanar la lista de listas
+    conectores_y_frases_totales = [item for sublist in conectores_y_frases_totales for item in sublist]
+
+    # Contar frecuencia de conectores
+    conectores = [item[0] for item in conectores_y_frases_totales]
+    frecuencia_conectores = Counter(conectores)
+    conectores_mas_usados = [item[0] for item in frecuencia_conectores.most_common(10)]
+    frases_relevantes = [frase for conector, frase in conectores_y_frases_totales if conector in conectores_mas_usados]
+
+    # Calcular TF-IDF para identificar palabras clave en las frases relevantes
+    custom_stopwords = list(cargar_stopwords('dictionaries/stopwords_es.txt'))
+    vectorizer = TfidfVectorizer(stop_words=custom_stopwords, max_features=20)  
+    tfidf_matrix = vectorizer.fit_transform(frases_relevantes)
+
+    # Obtener palabras clave
+    palabras_clave = vectorizer.get_feature_names_out()
+    tfidf_scores = tfidf_matrix.sum(axis=0).A1
+    keywords = sorted(zip(palabras_clave, tfidf_scores), key=lambda x: x[1], reverse=True)
+
+    # Convertir palabras clave en DataFrame
+    df_keywords = pd.DataFrame(keywords, columns=['Palabra Clave', 'Importancia'])
+    
+    # Guardar el DataFrame como CSV
+    os.makedirs(f"resultados/{caso}", exist_ok=True)
+    df_keywords.to_csv(f"processed_data/{caso}/Palabras_Clave_Despues_Conectores.csv", index=False)
+
+    # Crear un gráfico de tabla para las palabras y su importancia
+    plt.figure(figsize=(10, 6))
+    plt.axis('tight')
+    plt.axis('off')
+    tabla = plt.table(cellText=df_keywords.values,
+                      colLabels=df_keywords.columns,
+                      cellLoc='center',
+                      loc='center')
+    tabla.auto_set_font_size(False)
+    tabla.set_fontsize(12)
+    tabla.scale(1.2, 1.2)
+    
+    plt.title("Palabras post conectores", fontsize=14)
+    plt.savefig(f"resultados/{caso}/Conectores_Palabras_Clave.png", bbox_inches='tight')
+    plt.close()
+
+    print(f"Palabras clave después de conectores guardadas en resultados/{caso}/Palabras_Clave_Despues_Conectores.csv")
+    return df_keywords
 
 
 """
