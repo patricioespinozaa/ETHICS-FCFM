@@ -118,5 +118,24 @@ def read_data(caso):
                                     'Comentario - Grup - Diferencial 2', 
                                     'Comentario - Ind2 - Diferencial 2', 'agno', 'seccion']]
 
-    # Distinguir por diferenciales 
+    # Distinguir por diferenciales
+
+    # Convertir las columnas de los dataframes a string
+    col_df1 = [
+        'Comentario - Ind1 - Diferencial 1',
+        'Comentario - Grup - Diferencial 1',
+        'Comentario - Ind2 - Diferencial 1',
+    ]
+
+    col_df2 = [
+        'Comentario - Ind1 - Diferencial 2',
+        'Comentario - Grup - Diferencial 2',
+        'Comentario - Ind2 - Diferencial 2',
+    ]
+
+    # Convertir las columnas a string
+    for col in range (len(col_df1)):
+        df1[col_df1[col]] = df1[col_df1[col]].astype(str)
+        df2[col_df2[col]] = df2[col_df2[col]].astype(str)
+
     return df1, df2

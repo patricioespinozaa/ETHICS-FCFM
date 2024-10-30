@@ -126,7 +126,16 @@ def ejecutar_analisis(df_diferencial_1, df_diferencial_2, caso):
                                                    'Comentario - Ind1 - Diferencial 2', 
                                                    'Comentario - Grup - Diferencial 2', 
                                                    'Comentario - Ind2 - Diferencial 2')
+    return 
     
+def tree_dependency_graphs(caso):
+    # Leer los dato
+    df_diferencial_1 = pd.read_csv(f"processed_data/{caso}/diferencial_1_dependencias.csv")
+    df_diferencial_2 = pd.read_csv(f"processed_data/{caso}/diferencial_2_dependencias.csv")
+
+    # Generar gráficos
     graficar_boxplot(df_diferencial_1, df_diferencial_2, caso)
     crear_tabla_dependencias(df_diferencial_1, df_diferencial_2, caso)
     graficar_conteos(df_diferencial_1, df_diferencial_2, caso)
+    return
+

@@ -3,6 +3,9 @@ import spacy
 import pandas as pd
 from nltk.stem import SnowballStemmer
 from bertopic import BERTopic
+import matplotlib.pyplot as plt
+import seaborn as sns
+from collections import Counter
 
 nlp = spacy.load('es_core_news_md')
 
@@ -66,3 +69,115 @@ def entrenar_modelo_bertopic(comentarios_tokenizados, min_topic_size=10, nr_topi
     
     model.save("models/BertTopic_model")
     return model
+
+# === Obtencion de topicos === #
+
+import pandas as pd
+from collections import Counter
+
+def predict_topics(model, df_dif1, df_dif2, caso):
+    # Extraer tópicos para cada etapa (Ind1, Grup, Ind2)
+    topics_ind1_dif1 = model.transform(df_dif1['Comentario - Ind1 - Diferencial 1'].values.flatten())[0]
+    topics_grup_dif1 = model.transform(df_dif1['Comentario - Grup - Diferencial 1'].values.flatten())[0]
+    topics_ind2_dif1 = model.transform(df_dif1['Comentario - Ind2 - Diferencial 1'].values.flatten())[0]
+
+    topics_ind1_dif2 = model.transform(df_dif2['Comentario - Ind1 - Diferencial 2'].values.flatten())[0]
+    topics_grup_dif2 = model.transform(df_dif2['Comentario - Grup - Diferencial 2'].values.flatten())[0]
+    topics_ind2_dif2 = model.transform(df_dif2['Comentario - Ind2 - Diferencial 2'].values.flatten())[0]
+
+    # Guardar los tópicos en los dataframes
+    df_dif1['Topico_Ind1'] = topics_ind1_dif1
+    df_dif1['Topico_Grup'] = topics_grup_dif1
+    df_dif1['Topico_Ind2'] = topics_ind2_dif1
+
+    df_dif2['Topico_Ind1'] = topics_ind1_dif2
+    df_dif2['Topico_Grup'] = topics_grup_dif2
+    df_dif2['Topico_Ind2'] = topics_ind2_dif2
+
+    # Guardar como csv
+    df_dif1.to_csv(f"resultados/{caso}/df_dif1.csv", index=False)
+    df_dif2.to_csv(f"resultados/{caso}/df_dif2.csv", index=False)
+
+
+def contar_topicos(caso):
+    # Leer los csv
+    df_dif1 = pd.read_csv(f"resultados/{caso}/df_dif1.csv")
+    df_dif2 = pd.read_csv(f"resultados/{caso}/df_dif2.csv")
+
+    # Contar la frecuencia de tópicos en cada grupo
+    topic_counts = {
+        'Ind1_Dif1': Counter(df_dif1['Topico_Ind1']),
+        'Grup_Dif1': Counter(df_dif1['Topico_Grup']),
+        'Ind2_Dif1': Counter(df_dif1['Topico_Ind2']),
+        'Ind1_Dif2': Counter(df_dif2['Topico_Ind1']),
+        'Grup_Dif2': Counter(df_dif2['Topico_Grup']),
+        'Ind2_Dif2': Counter(df_dif2['Topico_Ind2'])
+    }
+    
+    return topic_counts
+
+# Función para generar un gráfico de barras agrupadas con Ind1, Grup, e Ind2
+def graficar_topicos_agrupados(topic_counts, differential, model, caso):
+    path = f"resultados/{caso}"
+    
+    # Construir las claves de conteo de tópicos basadas en el diferencial
+    key_ind1 = f'Ind1_Dif{differential}'
+    key_grup = f'Grup_Dif{differential}'
+    key_ind2 = f'Ind2_Dif{differential}'
+
+    # Extraer las frecuencias para las etapas, usando Counter si no existe
+    topic_counts_ind1 = topic_counts.get(key_ind1, Counter())
+    topic_counts_grup = topic_counts.get(key_grup, Counter())
+    topic_counts_ind2 = topic_counts.get(key_ind2, Counter())
+
+    # Obtener lista combinada de tópicos únicos en las tres fases
+    all_topics = set(topic_counts_ind1.keys()).union(set(topic_counts_grup.keys()), set(topic_counts_ind2.keys()))
+    
+    # Filtrar tópicos que tienen una frecuencia total mayor a 10
+    filtered_topics = [
+        topic for topic in all_topics 
+        if (topic_counts_ind1.get(topic, 0) + topic_counts_grup.get(topic, 0) + topic_counts_ind2.get(topic, 0)) > 10
+    ]
+
+    # Obtener palabras clave de los tópicos
+    top_words = []
+    for topic in filtered_topics:
+        try:
+            top_words.append(", ".join([w[0] for w in model.get_topic(topic)[:5]]))
+        except:
+            top_words.append(f"Tópico {topic} no encontrado")
+
+    # Frecuencias de cada tópico en Ind1, Grup e Ind2
+    freqs_ind1 = [topic_counts_ind1.get(topic, 0) for topic in filtered_topics]
+    freqs_grup = [topic_counts_grup.get(topic, 0) for topic in filtered_topics]
+    freqs_ind2 = [topic_counts_ind2.get(topic, 0) for topic in filtered_topics]
+
+    # Posiciones en el eje X
+    x = range(len(filtered_topics))
+
+    # Crear el gráfico de barras agrupadas
+    plt.figure(figsize=(14, 8))
+    
+    width = 0.2  # Ancho de las barras
+    plt.bar([p - width for p in x], freqs_ind1, width=width, label='Ind1', color=sns.color_palette("Blues")[2])
+    plt.bar(x, freqs_grup, width=width, label='Grup', color=sns.color_palette("Greens")[2])
+    plt.bar([p + width for p in x], freqs_ind2, width=width, label='Ind2', color=sns.color_palette("Oranges")[2])
+
+    # Añadir etiquetas y leyenda
+    plt.xlabel('Tópicos (Palabras Clave)', fontsize=14)
+    plt.ylabel('Frecuencia', fontsize=14)
+    plt.title(f"Frecuencia de Tópicos por Etapa - Diferencial {differential}", fontsize=16)
+    plt.xticks(ticks=x, labels=top_words, rotation=90, fontsize=12)
+    plt.legend(fontsize=12)
+
+    # Añadir líneas de cuadrícula
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    plt.tight_layout()
+
+    # Guardar el gráfico
+    plt.savefig(f"{path}/Frec_topicos_d{differential}.png", dpi=300, bbox_inches='tight')
+    
+    # Mostrar el gráfico
+    plt.show()
+
