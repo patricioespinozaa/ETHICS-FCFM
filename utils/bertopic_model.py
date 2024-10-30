@@ -95,14 +95,14 @@ def predict_topics(model, df_dif1, df_dif2, caso):
     df_dif2['Topico_Ind2'] = topics_ind2_dif2
 
     # Guardar como csv
-    df_dif1.to_csv(f"resultados/{caso}/df_dif1.csv", index=False)
-    df_dif2.to_csv(f"resultados/{caso}/df_dif2.csv", index=False)
+    df_dif1.to_csv(f"processed_data/{caso}/BERT_df1.csv", index=False)
+    df_dif2.to_csv(f"processed_data/{caso}/BERT_df2.csv", index=False)
 
 
 def contar_topicos(caso):
     # Leer los csv
-    df_dif1 = pd.read_csv(f"resultados/{caso}/df_dif1.csv")
-    df_dif2 = pd.read_csv(f"resultados/{caso}/df_dif2.csv")
+    df_dif1 = pd.read_csv(f"processed_data/{caso}/BERT_df1.csv")
+    df_dif2 = pd.read_csv(f"processed_data/{caso}/BERT_df2.csv")
 
     # Contar la frecuencia de tópicos en cada grupo
     topic_counts = {
@@ -176,8 +176,4 @@ def graficar_topicos_agrupados(topic_counts, differential, model, caso):
     plt.tight_layout()
 
     # Guardar el gráfico
-    plt.savefig(f"{path}/Frec_topicos_d{differential}.png", dpi=300, bbox_inches='tight')
-    
-    # Mostrar el gráfico
-    plt.show()
-
+    plt.savefig(f"{path}/BERT_frec_topicos_d{differential}.png", dpi=300, bbox_inches='tight')

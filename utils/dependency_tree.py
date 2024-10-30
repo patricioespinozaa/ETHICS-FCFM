@@ -26,7 +26,7 @@ def aplicar_dependencias_grupal(df, dif, caso, col_ind1, col_grup, col_ind2):
                   how='left')
     
     # Guardar datos
-    df.to_csv(f"processed_data/{caso}/diferencial_{dif}_dependencias.csv", index=False)
+    df.to_csv(f"processed_data/{caso}/Tree_dependency_df{dif}.csv", index=False)
 
     return df
 
@@ -130,8 +130,8 @@ def ejecutar_analisis(df_diferencial_1, df_diferencial_2, caso):
     
 def tree_dependency_graphs(caso):
     # Leer los dato
-    df_diferencial_1 = pd.read_csv(f"processed_data/{caso}/diferencial_1_dependencias.csv")
-    df_diferencial_2 = pd.read_csv(f"processed_data/{caso}/diferencial_2_dependencias.csv")
+    df_diferencial_1 = pd.read_csv(f"processed_data/{caso}/Tree_dependency_df1.csv")
+    df_diferencial_2 = pd.read_csv(f"processed_data/{caso}/Tree_dependency_df2.csv")
 
     # Generar gráficos
     graficar_boxplot(df_diferencial_1, df_diferencial_2, caso)
