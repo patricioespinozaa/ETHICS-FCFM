@@ -182,7 +182,3 @@ def procesar_y_graficar_topicos(caso, differential):
     plt.gca().invert_yaxis()  # Invertir el eje Y para mostrar el menos común arriba
     plt.tight_layout()
     plt.savefig(f"resultados/{caso}/ETHIC_Top20_Topicos_Menos_Comunes_Dif{differential}.png")
-
-
-
-
