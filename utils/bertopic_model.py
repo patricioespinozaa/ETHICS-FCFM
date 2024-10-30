@@ -86,13 +86,13 @@ def predict_topics(model, df_dif1, df_dif2, caso):
     topics_ind2_dif2 = model.transform(df_dif2['Comentario - Ind2 - Diferencial 2'].values.flatten())[0]
 
     # Guardar los tópicos en los dataframes
-    df_dif1['Topico_Ind1'] = topics_ind1_dif1
-    df_dif1['Topico_Grup'] = topics_grup_dif1
-    df_dif1['Topico_Ind2'] = topics_ind2_dif1
+    df_dif1['BERT_topicos_ind1'] = topics_ind1_dif1
+    df_dif1['BERT_topicos_grup'] = topics_grup_dif1
+    df_dif1['BERT_topicos_ind2'] = topics_ind2_dif1
 
-    df_dif2['Topico_Ind1'] = topics_ind1_dif2
-    df_dif2['Topico_Grup'] = topics_grup_dif2
-    df_dif2['Topico_Ind2'] = topics_ind2_dif2
+    df_dif2['BERT_topicos_ind1'] = topics_ind1_dif2
+    df_dif2['BERT_topicos_grup'] = topics_grup_dif2
+    df_dif2['BERT_topicos_ind2'] = topics_ind2_dif2
 
     # Guardar como csv
     df_dif1.to_csv(f"processed_data/{caso}/BERT_df1.csv", index=False)
@@ -106,12 +106,12 @@ def contar_topicos(caso):
 
     # Contar la frecuencia de tópicos en cada grupo
     topic_counts = {
-        'Ind1_Dif1': Counter(df_dif1['Topico_Ind1']),
-        'Grup_Dif1': Counter(df_dif1['Topico_Grup']),
-        'Ind2_Dif1': Counter(df_dif1['Topico_Ind2']),
-        'Ind1_Dif2': Counter(df_dif2['Topico_Ind1']),
-        'Grup_Dif2': Counter(df_dif2['Topico_Grup']),
-        'Ind2_Dif2': Counter(df_dif2['Topico_Ind2'])
+        'Ind1_Dif1': Counter(df_dif1['BERT_topicos_ind1']),
+        'Grup_Dif1': Counter(df_dif1['BERT_topicos_grup']),
+        'Ind2_Dif1': Counter(df_dif1['BERT_topicos_ind2']),
+        'Ind1_Dif2': Counter(df_dif2['BERT_topicos_ind1']),
+        'Grup_Dif2': Counter(df_dif2['BERT_topicos_grup']),
+        'Ind2_Dif2': Counter(df_dif2['BERT_topicos_ind2'])
     }
     
     return topic_counts
@@ -177,3 +177,10 @@ def graficar_topicos_agrupados(topic_counts, differential, model, caso):
 
     # Guardar el gráfico
     plt.savefig(f"{path}/BERT_frec_topicos_d{differential}.png", dpi=300, bbox_inches='tight')
+
+def BERT_contar_topicos_distintos(df, columna):
+    # Crear un diccionario para almacenar los resultados
+    topicos_distintos = 0
+    topicos_distintos += df[columna].nunique()
+    
+    return topicos_distintos
