@@ -118,6 +118,8 @@ def contar_topicos(caso):
 
 # Función para generar un gráfico de barras agrupadas con Ind1, Grup, e Ind2
 def graficar_topicos_agrupados(topic_counts, differential, model, caso):
+    print(f"Iniciando proceso para el diferencial {differential}...")
+    print("Realizando conteo de tópicos...")
     path = f"resultados/{caso}"
     
     # Construir las claves de conteo de tópicos basadas en el diferencial
@@ -155,6 +157,7 @@ def graficar_topicos_agrupados(topic_counts, differential, model, caso):
     # Posiciones en el eje X
     x = range(len(filtered_topics))
 
+    print("Generando gráfico de Frencuencia de Tópicos por Etapa...")
     # Crear el gráfico de barras agrupadas
     plt.figure(figsize=(14, 8))
     
@@ -177,6 +180,62 @@ def graficar_topicos_agrupados(topic_counts, differential, model, caso):
 
     # Guardar el gráfico
     plt.savefig(f"{path}/BERT_frec_topicos_d{differential}.png", dpi=300, bbox_inches='tight')
+    plt.clf()
+    plt.close()
+    print("Gráfico generado exitosamente.")
+    # Graficar
+    print("Generando gráficos de tópicos más y menos comunes...")
+    # Top 10 topicos mas frecuentes (considerando todas las etapas y distinguiendo por diferencial)
+    total_counts = {topic: (topic_counts_ind1.get(topic, 0) + 
+                        topic_counts_grup.get(topic, 0) + 
+                        topic_counts_ind2.get(topic, 0)) 
+                for topic in filtered_topics}
+    # Encontrar los 10 tópicos más comunes
+    top_10_topics = sorted(total_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+    top_10_topics, top_10_freqs = zip(*top_10_topics)
+
+    # Encontrar los 20 tópicos menos comunes
+    bottom_20_topics = sorted(total_counts.items(), key=lambda x: x[1])[:20]
+    bottom_20_topics, bottom_20_freqs = zip(*bottom_20_topics)
+
+    # Obtener palabras clave de los tópicos
+    top_words = []
+    for topic in filtered_topics:
+        try:
+            top_words.append(", ".join([w[0] for w in model.get_topic(topic)[:5]]))
+        except:
+            top_words.append(f"Tópico {topic} no encontrado")
+    
+    # Encontrar las palabras clave de los 10 tópicos más comunes
+    top_10_words = [", ".join([w[0] for w in model.get_topic(topic)[0:5]]) for topic in top_10_topics]
+    
+    # Encontrar las palabras clave de los 20 tópicos menos comunes
+    bottom_20_words = [", ".join([w[0] for w in model.get_topic(topic)[0:5]]) for topic in bottom_20_topics]
+
+    # Graficar los 10 tópicos más comunes
+    plt.figure(figsize=(14, 8))
+    sns.barplot(x=list(top_10_freqs), y=list(top_10_words), palette="Blues")
+    plt.ylabel('Tópicos (Palabras Clave)', fontsize=14)
+    plt.xlabel('Frecuencia', fontsize=14)
+    plt.title(f"Top 10 Tópicos Más Comunes - Diferencial {differential}", fontsize=16)
+    plt.grid(axis='x', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.savefig(f"{path}/BERT_Top10_Topicos_Mas_Comunes_d{differential}.png", dpi=300, bbox_inches='tight')
+    plt.clf()  
+    plt.close()
+
+    # Graficar los 20 tópicos menos comunes
+    plt.figure(figsize=(14, 8))
+    sns.barplot(x=list(bottom_20_freqs), y=list(bottom_20_words), palette="Reds")
+    plt.ylabel('Tópicos (Palabras Clave)', fontsize=14)
+    plt.xlabel('Frecuencia', fontsize=14)
+    plt.title(f"Bottom 20 Tópicos Menos Comunes - Diferencial {differential}", fontsize=16)
+    plt.grid(axis='x', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.savefig(f"{path}/BERT_Top20_Topicos_Menos_Comunes_d{differential}.png", dpi=300, bbox_inches='tight')
+    plt.clf()
+    plt.close()
+    print("Gráficos generados exitosamente.")
 
 def BERT_contar_topicos_distintos(df, columna):
     # Crear un diccionario para almacenar los resultados
