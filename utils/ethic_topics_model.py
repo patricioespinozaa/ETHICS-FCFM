@@ -6,6 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 
+
 # Cargar el modelo de embeddings de spaCy en español
 nlp = spacy.load("es_core_news_md") 
 
@@ -226,10 +227,6 @@ def ethic_topics_between_stages(caso):
     plt.savefig(f"resultados/{caso}/ETHIC_Topicos_Ind2_Mayor_Ind1.png")
     plt.close()
     print("Gráfico generado exitosamente.")
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 def ethic_topics_dependency_between_stages(caso):
     print("=== Dependencia de Tópicos Éticos entre Etapas ===")
