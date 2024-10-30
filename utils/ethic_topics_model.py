@@ -158,6 +158,7 @@ def procesar_y_graficar_topicos(caso, differential):
 
     # Guardar el gráfico
     plt.savefig(f"resultados/{caso}/ETHIC_Topics_Dif{differential}.png")
+    plt.close()
     
     # Graficar los 10 tópicos más comunes
     topico_frecuencia = all_counts[['Tópico', 'Frecuencia_Total']].sort_values(by='Frecuencia_Total', ascending=False).head(10)
@@ -170,6 +171,7 @@ def procesar_y_graficar_topicos(caso, differential):
     plt.gca().invert_yaxis()  # Invertir el eje Y para mostrar el más común arriba
     plt.tight_layout()
     plt.savefig(f"resultados/{caso}/ETHIC_Top10_Topicos_Dif{differential}.png")
+    plt.close()
 
     # Graficar los 20 tópicos menos comunes
     topico_frecuencia_menor = all_counts[['Tópico', 'Frecuencia_Total']].sort_values(by='Frecuencia_Total').head(20)
@@ -182,3 +184,92 @@ def procesar_y_graficar_topicos(caso, differential):
     plt.gca().invert_yaxis()  # Invertir el eje Y para mostrar el menos común arriba
     plt.tight_layout()
     plt.savefig(f"resultados/{caso}/ETHIC_Top20_Topicos_Menos_Comunes_Dif{differential}.png")
+    plt.close()
+
+def ethic_topics_between_stages(caso):
+    print("=== Comparación de Tópicos Éticos entre Etapas ===")
+    df1 = pd.read_csv(f"processed_data/{caso}/ETHIC_Topics_df1.csv")
+    df2 = pd.read_csv(f"processed_data/{caso}/ETHIC_Topics_df2.csv")
+    print("Generando gráfico...")
+    # Contar tópicos en Ind1 e Ind2 para df1
+    df1['len_ETHIC_topicos_ind1'] = df1['ETHIC_topicos_ind1'].apply(len)
+    df1['len_ETHIC_topicos_ind2'] = df1['ETHIC_topicos_ind2'].apply(len)
+    df1['topicos_ind2_mayor'] = df1['len_ETHIC_topicos_ind2'] > df1['len_ETHIC_topicos_ind1']
+    DF1 = df1['topicos_ind2_mayor'].sum()
+
+    # Contar tópicos en Ind1 e Ind2 para df2
+    df2['len_ETHIC_topicos_ind1'] = df2['ETHIC_topicos_ind1'].apply(len)
+    df2['len_ETHIC_topicos_ind2'] = df2['ETHIC_topicos_ind2'].apply(len)
+    df2['topicos_ind2_mayor'] = df2['len_ETHIC_topicos_ind2'] > df2['len_ETHIC_topicos_ind1']
+    DF2 = df2['topicos_ind2_mayor'].sum()
+
+    # Datos para el gráfico
+    data = {
+        'Diferencial': ['Diferencial 1', 'Diferencial 2'],
+        'Frecuencia': [DF1, DF2]
+    }
+    df_plot = pd.DataFrame(data)
+
+    # Crear el gráfico
+    plt.figure(figsize=(8, 5))
+    sns.barplot(x='Diferencial', y='Frecuencia', data=df_plot, palette='viridis')
+
+    # Personalizar el gráfico
+    plt.title("Estudiantes con más tópicos éticos en Ind2 que en Ind1, por diferencial", fontsize=16)
+    plt.xlabel("Diferencial", fontsize=14)
+    plt.ylabel("Frecuencia", fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+
+    # Mostrar el gráfico
+    plt.tight_layout()
+    plt.savefig(f"resultados/{caso}/ETHIC_Topicos_Ind2_Mayor_Ind1.png")
+    plt.close()
+    print("Gráfico generado exitosamente.")
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def ethic_topics_dependency_between_stages(caso):
+    print("=== Dependencia de Tópicos Éticos entre Etapas ===")
+    df1 = pd.read_csv(f"processed_data/{caso}/ETHIC_Topics_df1.csv")
+    df2 = pd.read_csv(f"processed_data/{caso}/ETHIC_Topics_df2.csv")
+    print("Generando gráfico...")
+
+    # Asegurarse de que las columnas relevantes son listas
+    df1['ETHIC_topicos_ind1'] = df1['ETHIC_topicos_ind1'].apply(eval)  # Suponiendo que las listas están en formato string
+    df1['ETHIC_topicos_grup'] = df1['ETHIC_topicos_grup'].apply(eval)  # Suponiendo que las listas están en formato string
+    df2['ETHIC_topicos_ind2'] = df2['ETHIC_topicos_ind2'].apply(eval)  # Suponiendo que las listas están en formato string
+
+    # Contar estudiantes que tienen tópicos en Ind2 que no están en Ind1 pero sí en Grup
+    def check_dependency(row):
+        # Tópicos en Ind2 que no están en Ind1 pero están en Grup
+        return any(topic in row['ETHIC_topicos_grup'] and topic not in row['ETHIC_topicos_ind1'] for topic in row['ETHIC_topicos_ind2'])
+
+    df2['tiene_topicos_dep'] = df2.apply(check_dependency, axis=1)
+    DF_dependency_count = df2['tiene_topicos_dep'].sum()
+
+    # Datos para el gráfico
+    data = {
+        'Dependencia': ['Dependencia de Tópicos'],
+        'Frecuencia': [DF_dependency_count]
+    }
+    df_plot = pd.DataFrame(data)
+
+    # Crear el gráfico
+    plt.figure(figsize=(8, 5))
+    sns.barplot(x='Dependencia', y='Frecuencia', data=df_plot, palette='coolwarm')
+
+    # Personalizar el gráfico
+    plt.title("Cantidad de Estudiantes con Tópicos en Ind2 no en Ind1 pero en Grup", fontsize=16)
+    plt.xlabel("Dependencia", fontsize=14)
+    plt.ylabel("Frecuencia", fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+
+    # Mostrar el gráfico
+    plt.tight_layout()
+    plt.savefig(f"resultados/{caso}/ETHIC_Topicos_Dependencia_Ind2_no_Ind1_Grup.png")
+    plt.close()
+    print("Gráfico generado exitosamente.")
