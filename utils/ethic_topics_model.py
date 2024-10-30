@@ -42,8 +42,6 @@ def ethic_palabras_clave_en_comentario(comentario):
 
     return ponderaciones
 
-
-
 def predecir_topicos_eticos(comentario):
     ponderaciones = ethic_palabras_clave_en_comentario(comentario)
     return [topic for topic, peso in ponderaciones.items() if peso > 0]  
@@ -91,3 +89,80 @@ def predict_ethic_topic(df1, df2, caso):
     # Guardar topicos predichos
     df1.to_csv(f"processed_data/{caso}/ETHIC_Topics_df1.csv", index=False)
     df2.to_csv(f"processed_data/{caso}/ETHIC_Topics_df2.csv", index=False)
+
+
+# === Graficar === #
+import seaborn as sns
+import matplotlib.pyplot as plt
+from collections import Counter
+import pandas as pd
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def procesar_y_graficar_topicos(caso, differential):
+    # Leer dataframes
+    df = pd.read_csv(f"processed_data/{caso}/ETHIC_Topics_df{differential}.csv")
+
+    # Aplicar estilo de Seaborn
+    sns.set(style="whitegrid")
+    
+    # Extraer y contar tópicos para cada etapa y diferencial
+    # Expandir las listas en las columnas y convertir a minúsculas
+    expanded_topics_ind1 = df['ETHIC_topicos_ind1'].apply(lambda x: eval(x) if isinstance(x, str) else x).explode().str.lower()
+    expanded_topics_grup = df['ETHIC_topicos_grup'].apply(lambda x: eval(x) if isinstance(x, str) else x).explode().str.lower()
+    expanded_topics_ind2 = df['ETHIC_topicos_ind2'].apply(lambda x: eval(x) if isinstance(x, str) else x).explode().str.lower()
+
+    # Contar las ocurrencias de cada tópico
+    topic_counts_ind1 = expanded_topics_ind1.value_counts().reset_index()
+    topic_counts_grup = expanded_topics_grup.value_counts().reset_index()
+    topic_counts_ind2 = expanded_topics_ind2.value_counts().reset_index()
+    
+    # Renombrar las columnas
+    topic_counts_ind1.columns = ['Tópico', 'Frecuencia']
+    topic_counts_grup.columns = ['Tópico', 'Frecuencia']
+    topic_counts_ind2.columns = ['Tópico', 'Frecuencia']
+    
+    # Unir todos los conteos en un solo DataFrame
+    all_counts = pd.merge(topic_counts_ind1, topic_counts_grup, on='Tópico', how='outer', suffixes=('_ind1', '_grup'))
+    all_counts = pd.merge(all_counts, topic_counts_ind2, on='Tópico', how='outer')
+    all_counts.columns = ['Tópico', 'Frecuencia_Ind1', 'Frecuencia_Grup', 'Frecuencia_Ind2']
+    
+    # Reemplazar NaN por 0
+    all_counts.fillna(0, inplace=True)
+
+    # Preparar los datos para el gráfico
+    all_counts['Frecuencia_Ind1'] = all_counts['Frecuencia_Ind1'].astype(int)
+    all_counts['Frecuencia_Grup'] = all_counts['Frecuencia_Grup'].astype(int)
+    all_counts['Frecuencia_Ind2'] = all_counts['Frecuencia_Ind2'].astype(int)
+
+    # Obtener los tópicos y frecuencias
+    top_words = all_counts['Tópico']
+    freqs_ind1 = all_counts['Frecuencia_Ind1']
+    freqs_grup = all_counts['Frecuencia_Grup']
+    freqs_ind2 = all_counts['Frecuencia_Ind2']
+
+    # Graficar
+    x = range(len(top_words))
+    plt.figure(figsize=(14, 8))
+    width = 0.2  
+    plt.bar([p - width for p in x], freqs_ind1, width=width, label='Ind1', color=sns.color_palette("Blues")[2])
+    plt.bar(x, freqs_grup, width=width, label='Grup', color=sns.color_palette("Greens")[2])
+    plt.bar([p + width for p in x], freqs_ind2, width=width, label='Ind2', color=sns.color_palette("Oranges")[2])
+    plt.xlabel('Tópicos (Palabras Clave)', fontsize=14)
+    plt.ylabel('Frecuencia', fontsize=14)
+    plt.title(f"Frecuencia de Tópicos por Etapa - Diferencial {differential}", fontsize=16)
+    plt.xticks(ticks=x, labels=top_words, rotation=90, fontsize=12)
+    plt.legend(fontsize=12)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+
+    plt.savefig(f"resultados/{caso}/ETHIC_Topics_Dif{differential}.png")
+    plt.show() 
+
+
