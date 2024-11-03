@@ -8,12 +8,12 @@ import pandas as pd
 def read_ethic_words(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         return set(f.read().splitlines())
-
+    
 # Contar cuantas palabras éticas hay en los comentarios
 def contar_palabras_etica(df1, df2, tokenizer):
     palabras_etica = read_ethic_words('dictionaries/ethic_words.txt')
     comentarios = cargar_y_preprocesar_comentarios(df1, df2, tokenizer)
-
+    palabras_etica = [tokenizer(palabra)[0] for palabra in palabras_etica]
     contador = Counter()
     for comentario in comentarios:
         for palabra in comentario.split():
@@ -30,7 +30,6 @@ def contar_palabras_etica(df1, df2, tokenizer):
     plt.title('Frecuencia de Palabras Éticas en Comentarios', fontsize=16)
     plt.xlabel('Frecuencia', fontsize=14)
     plt.ylabel('Palabras Éticas', fontsize=14)
-    plt.xticks(rotation=45)
     plt.grid(axis='x', linestyle='--', alpha=0.7)
     plt.tight_layout()
     

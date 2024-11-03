@@ -27,14 +27,16 @@ class StemmerTokenizer:
         self.stem = stem
         self.lemmatize = lemmatize
         self.ps = SnowballStemmer('spanish') if stem else None
+        self.stop_words_custom = cargar_stopwords('dictionaries/stopwords_es.txt')
 
     def __call__(self, doc):
+        # Limpiar y procesar el texto
         doc = re.sub(r'[^A-Za-záéíóúñÁÉÍÓÚÑ\s]', '', doc).lower()
         spacy_doc = nlp(doc)
         tokens = [
             self.ps.stem(token.lemma_) if self.stem and self.ps else token.lemma_
             for token in spacy_doc 
-            if token.text not in stop_words_custom and not token.is_punct
+            if token.text not in self.stop_words_custom and not token.is_punct
         ]
         return tokens
 
