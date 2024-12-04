@@ -8,6 +8,8 @@ Repositorio ayudantía Unidad ETHICS Otoño 2024 | Patricio Espinoza A.
 ## Casos trabajados:
 
 > Amanda
+> Luis
+> Adela 2023
 
 ## Análisis realizados:
 
