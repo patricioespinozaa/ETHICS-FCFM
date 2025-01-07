@@ -1,0 +1,14 @@
+keywords_dict = {
+    'dignidad': ['dignidad', 'respeto', 'honor', 'valía', 'estima'],
+    'justicia': ['justicia', 'injusticia', 'equidad', 'igualdad', 'imparcialidad'],
+    'moralidad': ['moralidad', 'moral', 'ética', 'integridad', 'rectitud'],
+    'responsabilidad': ['responsabilidad', 'deber', 'obligación', 'compromiso'],
+    'honestidad': ['honestidad', 'sinceridad', 'transparencia', 'franqueza', 'veracidad'],
+    'autonomía': ['autonomía', 'independencia', 'libertad', 'autodeterminación'],
+    'beneficencia': ['beneficencia', 'bienestar', 'altruismo', 'solidaridad'],
+    'no maleficencia': ['no maleficencia', 'no dañar', 'prevención del daño'],
+    'confidencialidad': ['confidencialidad', 'privacidad', 'secreto', 'protección de datos'],
+    'lealtad': ['lealtad', 'fidelidad', 'compromiso', 'confianza'],
+    'tolerancia': ['tolerancia', 'aceptación', 'respeto a la diversidad', 'comprensión'],
+    'desigualdad': ['desigualdad', 'inequidad', 'discriminación', 'injusticia social', 'exclusión']
+}
